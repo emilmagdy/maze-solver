@@ -1,7 +1,7 @@
 from graphics import Window,Point, Line, Cell
 import time
 import random
-random.seed(1)
+random.seed(3)
 
 class Maze:
     def __init__(self, x1, y1,
@@ -21,6 +21,8 @@ class Maze:
         self._create_cells()
         self._break_entrance_and_exit()
         self._break_walls_r(0, 0)
+        self._reset_cells_visited()
+        self.solve()
         
 
     def _create_cells(self):
@@ -104,7 +106,55 @@ class Maze:
                 next_cell.has_left_wall = False
                 self._draw_cell(i, j)
                 self._draw_cell(i+1, j)
-                self._break_walls_r(i+1, j)            
+                self._break_walls_r(i+1, j)  
+
+    def _reset_cells_visited(self):
+        for i in range(self._num_cols):
+            for j in range(self._num_rows):
+                self._cells[i][j].visited = False
+
+    def solve_r(self, i, j):
+        self._animate()
+        current_cell = self._cells[i][j]
+        current_cell.visited = True
+        if current_cell ==self._cells[self._num_cols-1][self._num_rows-1]:
+            return True
+        possible_directions = self.possible_directions(i, j)
+        for next_cell in possible_directions:
+            if j > 0 and next_cell == self._cells[i][j-1] and next_cell.has_bottom_wall == False:
+                current_cell.draw_move(next_cell)
+                if self.solve_r(i, j-1):
+                    return True
+                else:
+                    current_cell.draw_move(next_cell, undo=True)
+            elif j < self._num_rows - 1 and next_cell == self._cells[i][j+1] and next_cell.has_top_wall == False:
+                current_cell.draw_move(next_cell)
+                if self.solve_r(i, j+1):
+                    return True
+                else:
+                    current_cell.draw_move(next_cell, undo=True)
+            elif i > 0 and next_cell == self._cells[i-1][j] and next_cell.has_right_wall == False:
+                current_cell.draw_move(next_cell)
+                if self.solve_r(i-1, j):
+                    return True
+                else:
+                    current_cell.draw_move(next_cell, undo=True)
+            elif i < self._num_cols - 1 and next_cell == self._cells[i+1][j] and next_cell.has_left_wall == False:
+                current_cell.draw_move(next_cell)
+                if self.solve_r(i+1, j):
+                    return True
+                else:
+                    current_cell.draw_move(next_cell, undo=True)
+        return False
+    
+    def solve(self):
+        self.solve_r(0, 0)
+        if self.solve_r(0, 0):
+            return True
+        else:
+            return False
+
+                   
             
 
             
